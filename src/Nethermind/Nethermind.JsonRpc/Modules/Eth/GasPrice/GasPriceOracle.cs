@@ -57,23 +57,30 @@ namespace Nethermind.JsonRpc.Modules.Eth.GasPrice
 
         public UInt256 GetGasPriceEstimate()
         {
-            Block? headBlock = _blockFinder.Head;
-            if (headBlock is null)
-            {
-                return FallbackGasPrice();
-            }
+            // 2gwei hacked in by jkilpatr
+            // since xdai blocks are never full the base fee in the block never actually chages
+            // and this estimate is pretty useless and based on what other people decide to pay
+            // we shouldn't rely on it and here I'm just fixing it to a single value until we get a chance
+            // to update all the routers
+            return 3000000000;
 
-            Keccak headBlockHash = headBlock.Hash!;
-            if (_gasPriceEstimation.TryGetPrice(headBlockHash, out UInt256? price))
-            {
-                return price!.Value;
-            }
+            // Block? headBlock = _blockFinder.Head;
+            // if (headBlock is null)
+            // {
+            //     return FallbackGasPrice();
+            // }
 
-            IEnumerable<UInt256> txGasPrices = GetSortedGasPricesFromRecentBlocks(headBlock.Number);
-            UInt256 gasPriceEstimate = GetGasPriceAtPercentile(txGasPrices.ToList()) ?? GetMinimumGasPrice(headBlock.BaseFeePerGas);
-            gasPriceEstimate = UInt256.Min(gasPriceEstimate!, EthGasPriceConstants.MaxGasPrice);
-            _gasPriceEstimation.Set(headBlockHash, gasPriceEstimate);
-            return gasPriceEstimate!;
+            // Keccak headBlockHash = headBlock.Hash!;
+            // if (_gasPriceEstimation.TryGetPrice(headBlockHash, out UInt256? price))
+            // {
+            //     return price!.Value;
+            // }
+
+            // IEnumerable<UInt256> txGasPrices = GetSortedGasPricesFromRecentBlocks(headBlock.Number);
+            // UInt256 gasPriceEstimate = GetGasPriceAtPercentile(txGasPrices.ToList()) ?? GetMinimumGasPrice(headBlock.BaseFeePerGas);
+            // gasPriceEstimate = UInt256.Min(gasPriceEstimate!, EthGasPriceConstants.MaxGasPrice);
+            // _gasPriceEstimation.Set(headBlockHash, gasPriceEstimate);
+            // return gasPriceEstimate!;
         }
 
         internal IEnumerable<UInt256> GetSortedGasPricesFromRecentBlocks(long blockNumber) =>
